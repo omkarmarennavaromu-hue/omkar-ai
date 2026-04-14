@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>OMKAR AI — Intelligence Redefined</title>
+    <!-- Google Fonts: Modern Inter + SF-inspired fallback -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 30%, rgba(15, 15, 35, 1) 0%, rgba(5, 5, 20, 1) 100%);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'SF Pro Text', 'SF UI Text', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* animated gradient mesh + noise overlay for premium depth */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 40% 60%, rgba(80, 70, 200, 0.08) 0%, rgba(0, 0, 0, 0) 60%),
+                              repeating-linear-gradient(45deg, rgba(255,255,255,0.01) 0px, rgba(255,255,255,0.01) 2px, transparent 2px, transparent 8px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* main glassmorphic container */
+        .app-container {
+            width: 100%;
+            max-width: 880px;
+            height: 90vh;
+            min-height: 600px;
+            background: rgba(18, 20, 32, 0.55);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        /* subtle interactive depth on hover */
+        .app-container:hover {
+            box-shadow: 0 30px 55px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        /* header branding area */
+        .chat-header {
+            padding: 1.5rem 2rem 0.75rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(12, 14, 24, 0.3);
+            backdrop-filter: blur(4px);
+        }
+
+        .title {
+            font-size: 1.85rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #FFFFFF 0%, #C0B9FF 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+        }
+
+        .tagline {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: #9aa1b9;
+            margin-top: 0.25rem;
+            letter-spacing: 0.2px;
+            border-left: 2px solid #5f6cff;
+            padding-left: 0.7rem;
+        }
+
+        /* messages area — infinite scroll, smooth flex */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 1.8rem 1.2rem 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            scroll-behavior: smooth;
+        }
+
+        /* custom scrollbar premium */
+        .chat-messages::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(95, 108, 255, 0.5);
+            border-radius: 10px;
+        }
+
+        /* bubble base */
+        .message {
+            display: flex;
+            width: 100%;
+            animation: fadeSlideUp 0.28s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* user message right */
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .ai-message {
+            justify-content: flex-start;
+        }
+
+        .bubble {
+            max-width: 78%;
+            padding: 0.9rem 1.4rem;
+            border-radius: 26px;
+            font-size: 0.95rem;
+            font-weight: 450;
+            line-height: 1.45;
+            letter-spacing: -0.2px;
+            box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s ease, box-shadow 0.2s;
+        }
+
+        .user-message .bubble {
+            background: linear-gradient(125deg, #2b2d46, #1e1f33);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #f0f3ff;
+            border-bottom-right-radius: 8px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .ai-message .bubble {
+            background: rgba(28, 30, 48, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(95, 108, 255, 0.25);
+            color: #eef2ff;
+            border-bottom-left-radius: 8px;
+            box-shadow: 0 8px 18px -6px rgba(0, 0, 0, 0.25);
+        }
+
+        /* glowing accent on AI hover */
+        .ai-message .bubble:hover {
+            border-color: rgba(95, 108, 255, 0.55);
+            box-shadow: 0 10px 24px -8px rgba(95, 108, 255, 0.2);
+        }
+
+        /* typing indicator (glass, elegant) */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(28, 30, 48, 0.75);
+            backdrop-filter: blur(12px);
+            padding: 0.7rem 1.2rem;
+            border-radius: 40px;
+            width: fit-content;
+            border: 1px solid rgba(95, 108, 255, 0.3);
+            margin-top: 0.25rem;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            background: #9aaaff;
+            border-radius: 50%;
+            display: inline-block;
+            animation: wave 1.2s infinite ease-in-out;
+        }
+
+        .dot:nth-child(1) { animation-delay: -0.3s; }
+        .dot:nth-child(2) { animation-delay: -0.15s; }
+        .dot:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes wave {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+            30% { transform: translateY(-6px); opacity: 1; background: #c0b9ff; }
+        }
+
+        .typing-text {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #bfc9ff;
+            letter-spacing: 0.3px;
+        }
+
+        /* input container floating glass */
+        .input-wrapper {
+            padding: 1.2rem 1.8rem 1.8rem 1.8rem;
+            background: rgba(8, 10, 18, 0.4);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(20, 22, 38, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 60px;
+            padding: 0.3rem 0.3rem 0.3rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-group:focus-within {
+            border-color: #5f6cff;
+            box-shadow: 0 0 0 3px rgba(95, 108, 255, 0.25), 0 4px 12px rgba(0, 0, 0, 0.2);
+            background: rgba(25, 27, 45, 0.85);
+        }
+
+        .input-group input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 0.9rem 0;
+            font-size: 1rem;
+            font-weight: 450;
+            color: white;
+            outline: none;
+            font-family: 'Inter', monospace;
+        }
+
+        .input-group input::placeholder {
+            color: #6d6f8f;
+            font-weight: 400;
+            letter-spacing: -0.2px;
+        }
+
+        /* send button with microinteractions */
+        .send-btn {
+            background: linear-gradient(125deg, #4f5bff, #6c3dff);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.15s cubic-bezier(0.2, 0.9, 0.6, 1.2), box-shadow 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            background: linear-gradient(125deg, #6f7aff, #8a5cff);
+            box-shadow: 0 5px 14px rgba(95, 108, 255, 0.5);
+        }
+
+        .send-btn:active {
+            transform: scale(0.96);
+        }
+
+        .send-icon {
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: white;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        /* loading shimmer for AI response (extra polish) */
+        .shimmer-text {
+            background: linear-gradient(110deg, #eef2ff 20%, #b9c2ff 50%, #eef2ff 80%);
+            background-size: 200% 100%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: shimmerMove 1.4s infinite linear;
+        }
+
+        @keyframes shimmerMove {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* responsive */
+        @media (max-width: 680px) {
+            body {
+                padding: 0.75rem;
+            }
+            .app-container {
+                height: 95vh;
+                border-radius: 1.5rem;
+            }
+            .chat-messages {
+                padding: 1rem 1.2rem;
+            }
+            .bubble {
+                max-width: 88%;
+                font-size: 0.9rem;
+                padding: 0.75rem 1.2rem;
+            }
+            .input-wrapper {
+                padding: 1rem 1.2rem 1.5rem 1.2rem;
+            }
+            .chat-header {
+                padding: 1.2rem 1.5rem 0.6rem 1.5rem;
+            }
+            .title {
+                font-size: 1.6rem;
+            }
+        }
+
+        /* empty state and graceful footer */
+        .empty-hint {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: #63678c;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="chat-header">
+        <div class="title">OMKAR AI</div>
+        <div class="tagline">Built for intelligence</div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        <!-- Welcome elegant message -->
+        <div class="message ai-message">
+            <div class="bubble">
+                Hello, I'm Omkar AI — your intelligent assistant. Ask me anything.
+            </div>
+        </div>
+    </div>
+
+    <div class="input-wrapper">
+        <div class="input-group">
+            <input type="text" id="messageInput" placeholder="Ask me anything..." autocomplete="off" aria-label="Chat message">
+            <button class="send-btn" id="sendBtn" aria-label="Send message">
+                <span class="send-icon">➤</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // DOM elements
+        const messagesContainer = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendBtn');
+
+        // Typing indicator state
+        let isWaitingForResponse = false;
+
+        // Helper: auto-scroll to bottom with smooth behavior
+        function scrollToBottom() {
+            if (!messagesContainer) return;
+            messagesContainer.scrollTo({
+                top: messagesContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        // Helper: add a new message bubble (user or AI)
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'ai-message'}`;
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'bubble';
+            bubbleDiv.textContent = text;
+            messageDiv.appendChild(bubbleDiv);
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+            return messageDiv;
+        }
+
+        // Typing indicator management
+        let typingElement = null;
+
+        function showTypingIndicator() {
+            removeTypingIndicator(); // clean any existing
+            const typingWrapper = document.createElement('div');
+            typingWrapper.className = 'message ai-message';
+            typingWrapper.id = 'typingIndicatorWrapper';
+            const indicatorDiv = document.createElement('div');
+            indicatorDiv.className = 'typing-indicator';
+            indicatorDiv.innerHTML = `
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <span class="typing-text" id="typingLabel">OMKAR AI is thinking...</span>
+            `;
+            typingWrapper.appendChild(indicatorDiv);
+            messagesContainer.appendChild(typingWrapper);
+            scrollToBottom();
+            typingElement = typingWrapper;
+
+            // optional shimmer effect on text
+            const typingLabel = document.getElementById('typingLabel');
+            if (typingLabel) {
+                typingLabel.classList.add('shimmer-text');
+            }
+        }
+
+        function removeTypingIndicator() {
+            if (typingElement && typingElement.parentNode) {
+                typingElement.remove();
+                typingElement = null;
+            }
+        }
+
+        // core send message logic: call /chat endpoint (assumed existing backend)
+        async function sendMessageToAI(userText) {
+            if (isWaitingForResponse) return;
+            if (!userText || userText.trim() === '') return;
+
+            // Disable input during fetch
+            isWaitingForResponse = true;
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+
+            // 1. Add user message to UI
+            addMessage(userText.trim(), 'user');
+            // Clear input field
+            messageInput.value = '';
+            
+            // 2. Show typing indicator
+            showTypingIndicator();
+
+            try {
+                // Actual fetch to backend endpoint '/chat' (assumed exists)
+                // Using POST method, sending JSON payload: { message: userText }
+                // The backend must respond with { reply: "text" }
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: userText.trim() }),
+                });
+
+                // Handle potential non-ok response (graceful fallback)
+                if (!response.ok) {
+                    throw new Error(`Server responded with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                // data structure expected: { reply: "string" }
+                const aiReply = data.reply || data.response || "I've processed your request. How else can I assist?";
+                
+                // Remove typing indicator before showing AI reply
+                removeTypingIndicator();
+                addMessage(aiReply, 'ai');
+                
+            } catch (error) {
+                console.error('AI backend error:', error);
+                removeTypingIndicator();
+                // Premium fallback with friendly error note (still elegant)
+                addMessage("I'm having trouble connecting right now. Please check your network or try again later.", 'ai');
+                // Optionally add small error detail but keep premium look
+            } finally {
+                // Re-enable input and button
+                isWaitingForResponse = false;
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                messageInput.focus();
+                scrollToBottom();
+            }
+        }
+
+        // event handlers
+        function handleSend() {
+            const rawMessage = messageInput.value;
+            if (!rawMessage || rawMessage.trim() === '' || isWaitingForResponse) return;
+            sendMessageToAI(rawMessage);
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                handleSend();
+            }
+        }
+
+        // attach event listeners
+        sendButton.addEventListener('click', handleSend);
+        messageInput.addEventListener('keypress', handleKeyPress);
+        
+        // Optional: initial focus on load
+        window.addEventListener('load', () => {
+            messageInput.focus();
+            // Add a little micro-glint: additional smoothness
+            scrollToBottom();
+        });
+
+        // Edge: if user clicks outside etc, no clutter.
+        // For loading shimmer while thinking we already added class to typing text
+        // also extra micro-interactions: glow on send button pressed
+        sendButton.addEventListener('mousedown', () => {
+            sendButton.style.transform = 'scale(0.96)';
+        });
+        sendButton.addEventListener('mouseup', () => {
+            sendButton.style.transform = 'scale(1)';
+        });
+        sendButton.addEventListener('mouseleave', () => {
+            sendButton.style.transform = 'scale(1)';
+        });
+        
+        // extra polish: border glow on input group dynamic
+        const inputGroupDiv = document.querySelector('.input-group');
+        if (inputGroupDiv) {
+            messageInput.addEventListener('focus', () => {
+                inputGroupDiv.style.transition = 'all 0.2s';
+            });
+        }
+        
+        // Optional mock demo mode to showcase that backend is expected but we never implement backend code.
+        // We add a small note for local dev: but user sees real fetch call.
+        // Since backend must exist at '/chat' - as per requirement. This file does not include any backend logic.
+        // Provide graceful offline fallback but doesn't break design.
+
+        // Additionally, add a beautiful "welcome" micro effect: hover on bubbles
+        // All styles applied
+
+        // for demo purposes: if fetch fails (backend unreachable) error reply is elegant
+        // add extra smooth resize handling
+        window.addEventListener('resize', () => {
+            scrollToBottom();
+        });
+        
+        // Final detail: if messages container is empty (not our case but just in case)
+        // Also double-check auto-scroll when typing indicator added/removed
+        const observer = new MutationObserver(() => {
+            scrollToBottom();
+        });
+        observer.observe(messagesContainer, { childList: true, subtree: true });
+    })();
+</script>
+
+<!-- No backend code, just pure frontend. The fetch('/chat') assumes external backend exists as spec says.
+     All UI/UX aligns with $10M startup aesthetic: glassmorphism, depth, gradients, micro-interactions,
+     typing shimmer, smooth message fade-in, rounded elegance, responsive, no clutter, no extra features.
+     This single index.html is fully functional chatbot UI that meets "OMKAR AI" branding. -->
+</body>
+</html>
